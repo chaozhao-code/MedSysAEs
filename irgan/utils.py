@@ -24,11 +24,13 @@ class L2Loss(nn.Module):
         target_tensor = self.get_target_tensor(input)
         return self.loss(input, target_tensor)
 
+
 def file_len(fname):
     with open(fname) as f:
         for i, l in enumerate(f):
             pass
     return i + 1
+
 
 # Get batch data from training set
 def get_batch_data(file, index, size):  # 1,5->1,2,3,4,5
@@ -46,6 +48,7 @@ def get_batch_data(file, index, size):  # 1,5->1,2,3,4,5
         label.append(1.)
         label.append(0.)
     return user, item, label
+
 
 def precision_at_k(r, k):
     """Score is precision @ k
@@ -99,6 +102,7 @@ def mean_average_recall(rs):
     """
     return np.mean([average_recall(r) for r in rs])
 
+
 def dcg_at_k(r, k, method=1):
     """Score is discounted cumulative gain (dcg)
     Relevance is positive real values.  Can use binary
@@ -116,6 +120,7 @@ def dcg_at_k(r, k, method=1):
             raise ValueError('method must be 0 or 1.')
     return 0.
 
+
 def ndcg_at_k(r, k, method=1):
     """Score is normalized discounted cumulative gain (ndcg)
     Relevance is positive real values.  Can use binary
@@ -128,6 +133,7 @@ def ndcg_at_k(r, k, method=1):
         return 0.
     return dcg_at_k(r, k, method) / dcg_max
 
+
 def recall_at_k(r, k, all_pos_num):
     r = np.asfarray(r)[:k]
     return np.sum(r) / all_pos_num
@@ -137,6 +143,7 @@ def F1(pre, rec):
         return (2.0 * pre * rec) / (pre + rec)
     else:
         return 0.
+
 def load(path):
     """ Loads a single file """
     with open(path, 'r') as fhandle:

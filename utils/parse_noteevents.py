@@ -1,6 +1,17 @@
 import time
 import Levenshtein
-from CONSTANTS import IN_DATA_PATH_DEMO_ICD_CODES, IN_DATA_TEXT_PATH, EMBEDDINGS_FILENAME
+# Emily add: original:
+#from CONSTANTS import IN_DATA_PATH_DEMO_ICD_CODES, IN_DATA_TEXT_PATH, EMBEDDINGS_FILENAME
+# Emily add:
+from CONSTANTS import (
+    IN_DATA_PATH_DEMO_ICD_CODES,
+    IN_DATA_TEXT_PATH,
+    EMBEDDINGS_FILENAME,
+    NDC_CODE_DEFS_PATH,
+    LOAD_NDC_CODE_TEXT_DEFS
+)
+import itertools
+
 from irgan.utils import load
 import seaborn as sns
 import re
@@ -19,6 +30,8 @@ from transformers import (
 import torch
 import torch.nn.functional as F
 import gc; gc.enable()
+# Emily add:
+import os
 
 sns.set_theme()
 
@@ -30,7 +43,7 @@ RUN_STEP2 = False
 RUN_STEP3 = False
 RUN_STEP4 = False
 RUN_STEP5 = False
-RUN_STEP6 = False
+RUN_STEP6 = True
 
 
 # Declare constants
@@ -133,16 +146,49 @@ def __extract_date_in_milliseconds_pat1(text):
     else:
         return None
 
-def read_file_in_chunks(filepath, chunk_size = 1000):
-    with open(filepath, 'r', encoding='utf-8') as file:
-        chunk = []
-        for line in file:
-            chunk.append(line)
-            if len(chunk) == chunk_size:
-                yield chunk
-                chunk = []
-        if chunk:
-            yield chunk  # Yield the last chunk if it's not full
+# Emily add: original:
+#def read_file_in_chunks(filepath, chunk_size = 1000):
+#    with open(filepath, 'r', encoding='utf-8') as file:
+#        chunk = []
+#        for line in file:
+#            chunk.append(line)
+#            if len(chunk) == chunk_size:
+#                yield chunk
+#                chunk = []
+#        if chunk:
+#            yield chunk  # Yield the last chunk if it's not full
+
+# Emily add:
+#def read_file_in_chunks(filepath, chunk_size = 1000):
+#    full_path = os.path.abspath(filepath)
+#    print(f"Trying to open file at: {full_path}")
+#    try:
+#        with open(filepath, 'r', encoding='utf-8') as file:
+#            chunk = []
+#        for line in file:
+#            chunk.append(line)
+#            if len(chunk) == chunk_size:
+#                yield chunk
+#                chunk = []
+#        if chunk:
+#            yield chunk  # Yield the last chunk if it's not full
+#    except FileNotFoundError as e:
+#        print(f"File Not Found Error: {e}")
+#        print(f"Could not find file at: {full_path}")
+
+#Emily add:
+def read_file_in_chunks(filepath, batch_size):
+    try:
+        with open(filepath, 'r', encoding='utf-8') as file:
+            while True:
+                lines = list(itertools.islice(file, batch_size))
+                if not lines:
+                    break
+                yield lines
+    except FileNotFoundError as e:
+        print(f"File Not Found Error: {e}")
+        print(f"Could not find file at: {filepath}")
+        raise
 
 def extract_attributes_from_patients_json(filepath, attrs):
     ret_o = {}
@@ -408,7 +454,7 @@ if RUN_STEP3:
     print(f"Wrote hadm_ids from notes that are  missing codes in {HADM_IDS_FROM_TEXT_MISSING_CODES_FILENAME}")
 
 if RUN_STEP4:
-    print(f"Read {CONCAT_JSON_FILENAME}, remove entries for which we have no icd_codes in {IN_DATA_PATH_DEMO_ICD_CODES} [recorded in {HADM_IDS_FROM_TEXT_MISSING_CODES_FILENAME}]")
+    print(f"Read {CONCAT_JSON_FILENAME} , remove entries for which we have no icd_codes in {IN_DATA_PATH_DEMO_ICD_CODES} [recorded in {HADM_IDS_FROM_TEXT_MISSING_CODES_FILENAME}]")
     # read HADM_IDS_FROM_TEXT_MISSING_CODES_FILENAME into list
     hadm_ids_to_remove = read_specific_lines(HADM_IDS_FROM_TEXT_MISSING_CODES_FILENAME, line_numbers=[0])
     hadm_ids_to_remove = hadm_ids_to_remove[0]
@@ -540,7 +586,7 @@ if RUN_STEP6:
             return v
 
 
-    print(f"Read {CONCAT_JSON_PROCESSED_FILENAME} and try to learn representation via transformer [bert]")
+    print(f"Read {CONCAT_JSON_PROCESSED_FILENAME} and try  to learn representation via transformer [bert]")
     logging.set_verbosity_error()
     logging.set_verbosity_warning()
 
@@ -621,11 +667,13 @@ if RUN_STEP6:
 
         batch_counter += 1
 
+# Emily vraag: error: features not defined?   define it appropriately, due to the error it is not defined before  
+  
     del config, model, tokenizer, features
     gc.collect()
 
 
-print("Done")
+print("DONE DONE")
 end_time_seconds = int(time.time())
 print(f"execution took {format_time(end_time_seconds-start_time_seconds)}")
 

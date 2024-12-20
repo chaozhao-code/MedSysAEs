@@ -4,7 +4,7 @@ import random
 from builtins import filter # nanu?
 from collections import Counter
 import itertools as it
-
+import copy
 import numpy as np
 import pandas as pd
 
@@ -84,9 +84,9 @@ def filter_length(lists, min_length, *supplements):
 
 
 
-def split_list(s, criterion, treat_as_set=True):
+def split_set(s, criterion):
     """
-    Splits a list/set according to criterion
+    Splits a set according to criterion
     if criterion is float: toss a coin for each element
     if criterion is an int: drop as many random elements
     if criterion is callable: drop each element iff criterion(element) returns
@@ -94,9 +94,8 @@ def split_list(s, criterion, treat_as_set=True):
 
     In either case, the result is (remainder_set, dropped_elements)
     """
-    if treat_as_set:
-        s = set(s)
-    todrop = []
+    s = set(s)
+
     if callable(criterion):
         todrop = {e for e in s if criterion(e)}
     elif type(criterion) == float:
@@ -105,10 +104,7 @@ def split_list(s, criterion, treat_as_set=True):
         remainder = n_elems_to_drop - np.floor(n_elems_to_drop)
         should_round_up = random.random() >= 1-remainder
         n_elems_to_drop = np.ceil(n_elems_to_drop) if should_round_up else np.floor(n_elems_to_drop)
-        if treat_as_set:
-            todrop = random.sample(s, int(n_elems_to_drop))
-        else:
-            todrop = random.sample(range(0, len(s)), int(n_elems_to_drop))
+        todrop = random.sample(sorted(s), int(n_elems_to_drop))
         # todrop = {e for e in s if random.random() < criterion}
     elif type(criterion) == int:
         try:
@@ -118,24 +114,17 @@ def split_list(s, criterion, treat_as_set=True):
     else:
         raise ValueError('int, float, or callable expected')
 
-    if treat_as_set:
-        todrop = set(todrop)
-        return s - todrop, todrop
-
-    dropped = [s[i] for i in range(len(s)) if i in todrop]
-    s = [s[i] for i in range(len(s)) if i not in todrop]
-
-    return s, dropped
+    todrop = set(todrop)
+    return s - todrop, todrop
 
 
-
-def corrupt_lists(sets, drop=1, treat_as_set=True):
+def corrupt_sets(sets, drop=1):
     """
 
-    Splits a list of sets/lists into two sub-sets each,
+    Splits a list of sets into two sub-sets each,
     one containing corrupted sets and one retaining the removed elements
     """
-    split = [split_list(s, drop, treat_as_set) for s in sets]
+    split = [split_set(s, drop) for s in sets]
 
     return tuple(zip(*split))
 
@@ -195,13 +184,13 @@ class Bags(object):
             @param start_from - (Optional) specify from which item to start cloning (default is 0)
             @param n_items - (Optional) specify how many items to clone from original object (default is all)
         """
-        n_items = len(self.data) if n_items is None else n_items + start_from
-        data = [[t for t in self.data[b]] for b in range(start_from, n_items)]
-        bag_owners = [self.bag_owners[o] for o in range(start_from, n_items)]
-        if self.owner_attributes is not None:
-            owner_attributes = {list(self.owner_attributes.keys())[i]: {list(list(self.owner_attributes.items())[i][1].keys())[j]: list(list(self.owner_attributes.items())[i][1].values())[j]
-                                                                        for j in range(start_from, n_items)}
-                                for i in range(len(self.owner_attributes.items()))}
+        total_items = len(self.data) if n_items is None else n_items + start_from
+        data = [[item for item in self.data[batch]] for batch in range(start_from, total_items)]
+        bag_owners = [self.bag_owners[owner] for owner in range(start_from, total_items)]
+        owner_attributes = {
+            key: {inner_key: inner_value for inner_key, inner_value in list(value.items())[start_from:total_items]}
+            for key, value in list(self.owner_attributes.items())
+        }
 
         return Bags(data, bag_owners, owner_attributes=owner_attributes)
 
@@ -242,14 +231,15 @@ class Bags(object):
 
         attribute_l = []
         for owner in self.bag_owners:
-            if owner in self.owner_attributes[attribute]:
-                attribute_l.append(self.owner_attributes[attribute][owner])
-            else:
-                print(f"WARNING missing value {attribute} in hadm_id {owner}")
-                new_val = list(self.owner_attributes[attribute].values())[0]
-                print(f"Setting to random value {new_val}")
-                self.owner_attributes[attribute][owner] = new_val
-                attribute_l.append(self.owner_attributes[attribute][owner])
+            attribute_l.append(self.owner_attributes[attribute][owner])
+            # if owner in self.owner_attributes[attribute]:
+            #     attribute_l.append(self.owner_attributes[attribute][owner])
+            # else:
+            #     print(f"WARNING missing value {attribute} in hadm_id {owner}")
+            #     new_val = list(self.owner_attributes[attribute].values())[0]
+            #     print(f"Setting to random value {new_val}")
+            #     self.owner_attributes[attribute][owner] = new_val
+            #     attribute_l.append(self.owner_attributes[attribute][owner])
 
         return attribute_l
 
@@ -431,6 +421,7 @@ class Bags(object):
             test_set = Bags(test_data, test_owners, owner_attributes=test_attributes)
             train_sets.append(train_set)
             test_sets.append(test_set)
+
         return train_sets, test_sets
 
     def create_kfold_train_validate_test(self, n_folds = 1):
@@ -532,15 +523,14 @@ class BagsWithVocab(Bags):
         """ Creates a really deep copy """
         # safe cloning of an instance
         # deepcopy is NOT enough
-        end_at = len(self.data) if n_items is None else n_items + start_from
-        data = [[t for t in self.data[b]] for b in range(start_from, end_at)]
+        total_items = len(self.data) if n_items is None else n_items + start_from
+        data = [[item for item in self.data[batch]] for batch in range(start_from, total_items)]
+        bag_owners = [self.bag_owners[owner] for owner in range(start_from, total_items)]
         vocab = {k: v for k, v in self.vocab.items()}
-        bag_owners = [self.bag_owners[o] for o in range(start_from, end_at)]
-        owner_attributes = None
-        if self.owner_attributes is not None:
-            owner_attributes = {list(self.owner_attributes.keys())[i]: {list(list(self.owner_attributes.items())[i][1].keys())[j]: list(list(self.owner_attributes.items())[i][1].values())[j]
-                                                                        for j in range(start_from, end_at)}
-                                for i in range(len(self.owner_attributes.items()))}
+        owner_attributes = {
+            key: {inner_key: inner_value for inner_key, inner_value in list(value.items())[start_from:total_items]}
+            for key, value in list(self.owner_attributes.items())
+        }
 
         return BagsWithVocab(data, vocab, owners=bag_owners,
                              attributes=owner_attributes)

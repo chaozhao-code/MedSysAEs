@@ -8,12 +8,14 @@ from .ub import AutoEncoderMixin
 
 class SVDRecommender(Recommender, AutoEncoderMixin):
     """ SVD Baseline, capable of dealing with text """
-    def __init__(self, dims=1000, use_title=False, tfidf_params={}, **kwargs):
+    def __init__(self, model_params={'dims': 1000}, use_title=False, tfidf_params={}, **kwargs):
         super(SVDRecommender, self).__init__()
+
+        self.model_params = model_params
         if use_title:
             self.tfidf = TfidfVectorizer(input='content', **tfidf_params)
 
-        self.svd = TruncatedSVD(dims, **kwargs)
+        self.svd = TruncatedSVD(int(self.model_params['dims']), **kwargs)
         self.use_title = use_title
 
     def __str__(self):

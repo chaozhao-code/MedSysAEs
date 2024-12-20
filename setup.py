@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 requirements = [
 	'Jinja2==3.1.2',
@@ -43,10 +43,10 @@ requirements = [
 	'mccabe==0.7.0',
 	'murmurhash==1.0.9',
 	'numpy==1.23.4',
-	'nvidia-cublas-cu11==11.10.3.66',
-	'nvidia-cuda-nvrtc-cu11==11.7.99',
-	'nvidia-cuda-runtime-cu11==11.7.99',
-	'nvidia-cudnn-cu11==8.5.0.96',
+	# 'nvidia-cublas-cu11==11.10.3.66',
+	# 'nvidia-cuda-nvrtc-cu11==11.7.99',
+	# 'nvidia-cuda-runtime-cu11==11.7.99',
+	# 'nvidia-cudnn-cu11==8.5.0.96',
 	'packaging==21.3',
 	'pandas==1.5.1',
 	'parso==0.8.3',
@@ -77,7 +77,7 @@ requirements = [
 	'setuptools==60.2.0',
 	'simplegeneric==0.8.1',
 	'six==1.16.0',
-	'sklearn==0.0.post1',
+#	'sklearn==0.0.post1',
 	'smart-open==6.2.0',
 	'spacy==3.6.1',
 	'spacy-legacy==3.0.12',
@@ -103,6 +103,7 @@ requirements = [
 setup(name='aaerec',
       version=0.1,
       description='Multi-modal Adversarial Autoencoders as Recommender Systems',
+	  packages=find_packages(include=["aaerec", "aaerec.*"]),
       author="Lukas Galke",
       author_email="lga@informatik.uni-kiel.de",
       install_requires=requirements

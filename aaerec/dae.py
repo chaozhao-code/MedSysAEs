@@ -1,4 +1,6 @@
 """ Denoising Autoencoders """
+import sys
+
 # CFR https://gist.github.com/bigsnarfdude/dde651f6e06f266b48bc3750ac730f80,
 # https://github.com/GunhoChoi/Kind-PyTorch-Tutorial/tree/master/07_Denoising_Autoencoder
 
@@ -195,9 +197,21 @@ class DenoisingAutoEncoder():
             z_sample = self.conditions.encode_impose(z_sample, condition_data)
         z_sample = torch.nan_to_num(z_sample)
         x_sample = self.dec(z_sample)
-        recon_loss = F.binary_cross_entropy(x_sample + TINY,
-                                            batch.view(batch.size(0),
-                                                       batch.size(1)) + TINY)
+
+        x_test = batch.view(batch.size(0), batch.size(1))
+
+        data_min = torch.min(x_test, dim=0, keepdim=True)[0]
+        data_max = torch.max(x_test, dim=0, keepdim=True)[0]
+
+        # Min-Max Scaling 到 [0, 1]
+        x_test = (x_test - data_min) / (data_max - data_min)
+        x_test = torch.nan_to_num(x_test)
+
+        recon_loss = F.binary_cross_entropy(x_sample + TINY, x_test + TINY)
+        #
+        # recon_loss = F.binary_cross_entropy(x_sample + TINY,
+        #                                     batch.view(batch.size(0),
+        #                                                batch.size(1)) + TINY)
         self.enc_optim.zero_grad()
         self.dec_optim.zero_grad()
         if self.conditions:

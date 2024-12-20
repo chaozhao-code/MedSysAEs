@@ -1,3 +1,5 @@
+import sys
+
 import torch.nn as nn
 
 from torch import optim
@@ -484,9 +486,12 @@ class CategoricalCondition(ConcatenationBasedConditioning):
         else:
             # else use fixed vocab size or None, which is fine aswell
             cutoff = int(self.vocab_size)
-        print("Using top {:.2f}% authors ({})".format(cutoff / len(flat_items) * 100, cutoff))
-
+        # Chao: Note there is a problem, because this function only use the training data to build the vocab
+        # Chao: So for the icd code, the vocab is not complete.
+        # print("Using top {:.2f}% authors ({})".format(cutoff / len(flat_items) * 100, cutoff))
+        # print("DEBUG: flat_items[:5]", flat_items[:5])
         item_cnt = Counter(flat_items).most_common(cutoff)
+        # print("DEBUG: item_cnt[:5]", len(item_cnt))
         # index 0 is reserved for unk idx
         self.vocab = {value: idx + 1 for idx, (value, __) in enumerate(item_cnt)}
         num_embeddings = len(self.vocab) + 1

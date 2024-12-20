@@ -1,4 +1,6 @@
 """ Baselines """
+import sys
+
 import numpy as np
 from numpy.random import rand
 from .base import Recommender
@@ -21,26 +23,27 @@ class RandomBaseline(Recommender):
 
 class Countbased(Recommender):
     """ Item Co-Occurrence """
-    def __init__(self, order=1):
+    def __init__(self, model_params={'order': 1}):
         super().__init__()
-        self.order = order
+        self.model_params = model_params
 
     def __str__(self):
         s = "Count-based Predictor"
-        s += " (order {})".format(self.order)
+        s += " (order {})".format(self.model_params['order'])
         return s
 
     def train(self, X):
         X = X.tocsr()
         # Construct cooccurrence matrix
         self.cooccurences = X.T @ X
-        for __ in range(0, self.order - 1):
+        for __ in range(0, int(self.model_params['order']) - 1):
             self.cooccurences = self.cooccurences.T @ self.cooccurences
 
     def predict(self, X):
         # Sum up values of coocurrences
         X = X.tocsr()
         return X @ self.cooccurences
+
 
 
 class MostPopular(Recommender):
