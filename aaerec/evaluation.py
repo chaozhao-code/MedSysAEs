@@ -10,7 +10,7 @@ import scipy.sparse as sp
 from . import rank_metrics_with_std as rm
 from .datasets import corrupt_sets
 from .transforms import lists2sparse
-from aaerec.rank_metrics_with_std import mean_average_f1
+from aaerec.rank_metrics_with_std import mean_f1
 
 
 def argtopk(X, k):
@@ -136,8 +136,25 @@ class MAP(RankingMetric):
         else:
             return np.array([rm.average_precision(r) for r in rs])
 
+# class MAF1(RankingMetric):
+#     """ Mean average F1 score at k """
+#     def __init__(self, k=None):
+#         super().__init__(k=k)
+#
+#     def __call__(self, y_true, y_pred, average=True):
+#         """
+#         """
+#         rs = super().__call__(y_true, y_pred)
+#         k = self.k if self.k is not None else y_true.shape[1]
+#         # map, map_std = mean_average_precision(rs)
+#         # mar, mar_std = mean_average_recall(rs)
+#         # rec = [ recall_at_k(rs[i], k, sum(y_true[i])) for i in range(len(rs))]
+#         all_pos_nums = np.array([sum(y_true[i]) for i in range(y_true.shape[0])])
+#         maf1, maf1_std = mean_average_f1(rs, all_pos_nums)
+#         return maf1, maf1_std
+
 class MAF1(RankingMetric):
-    """ Mean average F1 score at k """
+    """ Mean F1 score at k """
     def __init__(self, k=None):
         super().__init__(k=k)
 
@@ -145,13 +162,27 @@ class MAF1(RankingMetric):
         """
         """
         rs = super().__call__(y_true, y_pred)
-        k = self.k if self.k is not None else y_true.shape[1]
         # map, map_std = mean_average_precision(rs)
         # mar, mar_std = mean_average_recall(rs)
         # rec = [ recall_at_k(rs[i], k, sum(y_true[i])) for i in range(len(rs))]
         all_pos_nums = np.array([sum(y_true[i]) for i in range(y_true.shape[0])])
-        maf1, maf1_std = mean_average_f1(rs, all_pos_nums)
+        maf1, maf1_std = mean_f1(rs, all_pos_nums)
         return maf1, maf1_std
+
+class Recall(RankingMetric):
+    def __init__(self, k=None):
+        super().__init__(k=k)
+
+    def __call__(self, y_true, y_pred, average=True):
+        """
+        """
+        rs = super().__call__(y_true, y_pred)
+        all_pos_nums = np.array([sum(y_true[i]) for i in range(y_true.shape[0])])
+        recall = (rs > 0).sum(axis=1) / all_pos_nums
+        if average:
+            return recall.mean(), recall.std()
+        else:
+            return recall
 
 class P(RankingMetric):
     def __init__(self, k=None):
@@ -177,7 +208,7 @@ class P(RankingMetric):
 BOUNDED_METRICS = {
     # (bounded) ranking metrics
     '{}@{}'.format(M.__name__.lower(), k): M(k)
-    for M in [MRR, MAP, P, MAF1] for k in [5, 10, 20]
+    for M in [MRR, MAP, P, MAF1, Recall] for k in [5, 10, 20, 50, 100]
 }
 BOUNDED_METRICS['P@1'] = P(1)
 

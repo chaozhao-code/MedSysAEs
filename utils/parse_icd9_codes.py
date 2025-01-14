@@ -346,6 +346,8 @@ if 5 == 5:
     for x in pats_cols_to_aggr:
         GLOBAL_MEANS[x] = np.nanmean(df[x])
         GLOBAL_SDS[x] = np.nanstd(df[x])
+
+
 # Step 6-  iteratively load, parse, impute ts, and save records from csv to json format. Also set los_hospital to 0 where its negative
 if 6 == 6:
     try_log_info("***************** START Step 6 - iteratively load, parse and save records from csv to json format  *****************")

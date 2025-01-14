@@ -175,12 +175,12 @@ class VAE(nn.Module):
         recon_batch = torch.nan_to_num(recon_batch)
 
         # x_test = batch.view(batch.size(0), batch.size(1))
-        data_min = torch.min(X, dim=0, keepdim=True)[0]
-        data_max = torch.max(X, dim=0, keepdim=True)[0]
-
-        # Min-Max Scaling 到 [0, 1]
-        X = (X - data_min) / (data_max - data_min)
-        X = torch.nan_to_num(X)
+        # data_min = torch.min(X, dim=0, keepdim=True)[0]
+        # data_max = torch.max(X, dim=0, keepdim=True)[0]
+        #
+        # # Min-Max Scaling 到 [0, 1]
+        # X = (X - data_min) / (data_max - data_min)
+        # X = torch.nan_to_num(X)
 
         loss = self.loss_function(recon_batch, X, mu, logvar)
         if use_condition:

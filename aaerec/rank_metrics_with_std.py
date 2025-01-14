@@ -189,6 +189,23 @@ def mean_average_f1(rs, all_pos_nums):
     af1s = np.array([F1(aps[i], ars[i]) for i in range(len(aps))])
     return af1s.mean(), af1s.std()
 
+def mean_f1(rs, all_pos_nums):
+    """Score is mean f1
+
+    Relevance is binary (nonzero is relevant)
+
+    Args:
+        rs: Iterator of relevance scores (list or numpy) in rank order
+            (first element is the first item)
+
+    Returns:
+        Mean f1
+    """
+    precisions = [precision_at_k(r, len(r)) for r in rs] # each average precision is the average of the precisions for each code in a patient (row)
+    recalls = [np.sum(rs[i])/ all_pos_nums[i] for i in range(len(all_pos_nums))]
+    af1s = np.array([F1(precisions[i], recalls[i]) for i in range(len(precisions))])
+    return af1s.mean(), af1s.std()
+
 def dcg_at_k(r, k, method=0):
     """Score is discounted cumulative gain (dcg)
 

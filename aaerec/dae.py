@@ -200,12 +200,12 @@ class DenoisingAutoEncoder():
 
         x_test = batch.view(batch.size(0), batch.size(1))
 
-        data_min = torch.min(x_test, dim=0, keepdim=True)[0]
-        data_max = torch.max(x_test, dim=0, keepdim=True)[0]
-
-        # Min-Max Scaling 到 [0, 1]
-        x_test = (x_test - data_min) / (data_max - data_min)
-        x_test = torch.nan_to_num(x_test)
+        # data_min = torch.min(x_test, dim=0, keepdim=True)[0]
+        # data_max = torch.max(x_test, dim=0, keepdim=True)[0]
+        #
+        # # Min-Max Scaling 到 [0, 1]
+        # x_test = (x_test - data_min) / (data_max - data_min)
+        # x_test = torch.nan_to_num(x_test)
 
         recon_loss = F.binary_cross_entropy(x_sample + TINY, x_test + TINY)
         #

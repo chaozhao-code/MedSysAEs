@@ -1,10 +1,14 @@
---index-url https://pypi.python.org/simple/
-
-# Requirements specified in setup.py
-
--e .
-
-# Development requirements
-pytest
-pylint
-jedi
+gensim==4.3.2
+matplotlib==3.8.4
+numpy==2.2.1
+pandas==2.2.3
+pytest==7.4.4
+python_Levenshtein==0.26.1
+python_Levenshtein==0.26.1
+scikit_learn==1.4.2
+scipy==1.15.1
+seaborn==0.13.2
+setuptools==69.5.1
+spacy==3.8.3
+torch==2.6.0.dev20241008
+transformers==4.48.0
