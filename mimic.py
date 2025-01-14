@@ -162,8 +162,9 @@ def main(min_count=50, drop=0.5, n_folds=5, tuning=False, if_four=False, model_i
             metrics_df['metric_val'] = metrics_df['metric_val'].round(4)
             metrics_df['metric_std'] = metrics_df['metric_std'].round(4)
             print(f"Pipeline run completed for model: {model_name}")
-            metrics_df.to_csv('./{}_{}_{}.csv'.format(outfile, model_name, fold_index), sep='\t')
-            print(f"Metrics saved for model: {model_name}")
+            print(metrics_df)
+            # metrics_df.to_csv('./{}_{}_{}.csv'.format(outfile, model_name, fold_index), sep='\t')
+            # print(f"Metrics saved for model: {model_name}")
         except Exception as e:
             print(f"Error running CV pipeline for model {model_name}: {e}")
     os.remove("splitsets100.pkl")
